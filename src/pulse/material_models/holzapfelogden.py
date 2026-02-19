@@ -264,16 +264,16 @@ class HolzapfelOgden(HyperElasticMaterial):
             return lambda I8: 0.0
 
     @staticmethod
-    def transversely_isotropic_parameters() -> HolzapfelOgdenParameters:
+    def transversely_isotropic_parameters(stiffness_scale = 1.0) -> HolzapfelOgdenParameters:
         """
         Material parameters for the Holzapfel Ogden model
         Taken from Table 1 row 3 in the main paper
         """
 
         return {
-            "a": Variable(2.280, "kPa"),
+            "a": Variable(2.280 * stiffness_scale, "kPa"),
             "b": Variable(9.726, "dimensionless"),
-            "a_f": Variable(1.685, "kPa"),
+            "a_f": Variable(1.685 * stiffness_scale, "kPa"),
             "b_f": Variable(15.779, "dimensionless"),
             "a_s": Variable(0.0, "kPa"),
             "b_s": Variable(0.0, "dimensionless"),
@@ -282,38 +282,38 @@ class HolzapfelOgden(HyperElasticMaterial):
         }
 
     @staticmethod
-    def partly_orthotropic_parameters() -> HolzapfelOgdenParameters:
+    def partly_orthotropic_parameters(stiffness_scale = 1.0) -> HolzapfelOgdenParameters:
         """
         Material parameters for the Holzapfel Ogden model
         Taken from Table 1 row 1 in the main paper
         """
 
         return {
-            "a": Variable(0.057, "kPa"),
+            "a": Variable(0.05 * stiffness_scale, "kPa"),
             "b": Variable(8.094, "dimensionless"),
-            "a_f": Variable(21.503, "kPa"),
+            "a_f": Variable(21.503 * stiffness_scale, "kPa"),
             "b_f": Variable(15.819, "dimensionless"),
-            "a_s": Variable(6.841, "kPa"),
+            "a_s": Variable(6.841 * stiffness_scale, "kPa"),
             "b_s": Variable(6.959, "dimensionless"),
             "a_fs": Variable(0.0, "kPa"),
             "b_fs": Variable(0.0, "dimensionless"),
         }
 
     @staticmethod
-    def orthotropic_parameters() -> HolzapfelOgdenParameters:
+    def orthotropic_parameters(stiffness_scale = 1.0) -> HolzapfelOgdenParameters:
         """
         Material parameters for the Holzapfel Ogden model
         Taken from Table 1 row 2 in the main paper
         """
 
         return {
-            "a": Variable(0.059, "kPa"),
+            "a": Variable(0.059 * stiffness_scale, "kPa"),
             "b": Variable(8.023, "dimensionless"),
-            "a_f": Variable(18.472, "kPa"),
+            "a_f": Variable(18.472 * stiffness_scale, "kPa"),
             "b_f": Variable(16.026, "dimensionless"),
-            "a_s": Variable(2.481, "kPa"),
+            "a_s": Variable(2.481 * stiffness_scale, "kPa"),
             "b_s": Variable(11.120, "dimensionless"),
-            "a_fs": Variable(0.216, "kPa"),
+            "a_fs": Variable(0.216 * stiffness_scale, "kPa"),
             "b_fs": Variable(11.436, "dimensionless"),
         }
 
