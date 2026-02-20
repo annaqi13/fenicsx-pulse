@@ -289,7 +289,7 @@ class HolzapfelOgden(HyperElasticMaterial):
         """
 
         return {
-            "a": Variable(0.05 * stiffness_scale, "kPa"),
+            "a": Variable(0.057 * stiffness_scale, "kPa"),
             "b": Variable(8.094, "dimensionless"),
             "a_f": Variable(21.503 * stiffness_scale, "kPa"),
             "b_f": Variable(15.819, "dimensionless"),
