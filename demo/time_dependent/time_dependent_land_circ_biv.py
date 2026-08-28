@@ -12,8 +12,10 @@
 # ## Models
 #
 # * **Mechanics**: 3D BiV model with Holzapfel-Ogden material, active stress, and cavity volume constraints.
-# * **Circulation**: [Regazzoni et al. 2022] lumped-parameter model. We replace both the 0D LV and RV chambers with our 3D model.
-# * **Cell Model**: TorOrd-Land model for active tension generation.
+# * **Circulation**: {cite}`regazzoni2022cardiac` lumped-parameter model. We replace both the
+#   0D LV and RV chambers with our 3D model.
+# * **Cell Model**: TorOrd {cite}`tomek2019development`-Land {cite}`land2017model` model for
+#   active tension generation.
 #
 # ---
 
@@ -61,55 +63,20 @@ geo = cardiac_geometries.geometry.Geometry.from_folder(
     folder=geodir,
 )
 # Scale the geometry to meters and adjust the size so that LV and RV volumes are reasonable
-geo.mesh.geometry.x[:] *= 1.5e-2
+geo.mesh.geometry.x[:] *= 1.6e-2
 
-# Now we need to redefine the markers to have so that facets on the endo- and epicardium combine both
-# free wall and the septum.
-
-markers = {"ENDO_LV": [1, 2], "ENDO_RV": [2, 2], "BASE": [3, 2], "EPI": [4, 2]}
-marker_values = geo.ffun.values.copy()
-marker_values[
-    np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["LV_ENDO_FW"][0]))
-] = markers["ENDO_LV"][0]
-marker_values[np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["LV_SEPTUM"][0]))] = (
-    markers["ENDO_LV"][0]
-)
-marker_values[
-    np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["RV_ENDO_FW"][0]))
-] = markers["ENDO_RV"][0]
-marker_values[np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["RV_SEPTUM"][0]))] = (
-    markers["ENDO_RV"][0]
-)
-marker_values[np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["BASE"][0]))] = (
-    markers["BASE"][0]
-)
-marker_values[np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["LV_EPI_FW"][0]))] = (
-    markers["EPI"][0]
-)
-marker_values[np.isin(geo.ffun.indices, geo.ffun.find(geo.markers["RV_EPI_FW"][0]))] = (
-    markers["EPI"][0]
-)
-
-geo.markers = markers
-ffun = dolfinx.mesh.meshtags(
-    geo.mesh,
-    geo.ffun.dim,
-    geo.ffun.indices,
-    marker_values,
-)
-geo.ffun = ffun
 
 geometry = pulse.HeartGeometry.from_cardiac_geometries(
     geo, metadata={"quadrature_degree": 6},
 )
 
-# Next we create the material object, and we will use the transversely isotropic version of the {py:class}`Holzapfel Ogden model <pulse.holzapfelogden.HolzapfelOgden>`
+# Next we create the material object, and we will use the transversely isotropic version of the {py:class}`Holzapfel Ogden model <pulse.material_models.holzapfelogden.HolzapfelOgden>`
 
 material_params = pulse.HolzapfelOgden.transversely_isotropic_parameters()
 # material_params = pulse.HolzapfelOgden.orthotropic_parameters()
 material = pulse.HolzapfelOgden(f0=geo.f0, s0=geo.s0, **material_params)  # type: ignore
 
-# We use an active stress approach with 30% transverse active stress (see {py:meth}`pulse.active_stress.transversely_active_stress`)
+# We use an active stress approach with 30% transverse active stress (see {py:func}`pulse.active_stress.transversely_active_stress`)
 
 Ta = pulse.Variable(
     dolfinx.fem.Constant(geometry.mesh, dolfinx.default_scalar_type(0.0)), "kPa",
@@ -131,7 +98,7 @@ model = pulse.CardiacModel(
 )
 
 alpha_epi = pulse.Variable(
-    dolfinx.fem.Constant(geometry.mesh, dolfinx.default_scalar_type(1e8)),
+    dolfinx.fem.Constant(geometry.mesh, dolfinx.default_scalar_type(1e6)),
     "Pa / m",
 )
 robin_epi = pulse.RobinBC(value=alpha_epi, marker=geometry.markers["EPI"][0])
@@ -142,17 +109,17 @@ alpha_base = pulse.Variable(
 robin_base = pulse.RobinBC(value=alpha_base, marker=geometry.markers["BASE"][0])
 
 
-lvv_initial = geo.mesh.comm.allreduce(geometry.volume("ENDO_LV"), op=MPI.SUM)
+lvv_initial = geo.mesh.comm.allreduce(geometry.volume("LV"), op=MPI.SUM)
 lv_volume = dolfinx.fem.Constant(
     geometry.mesh, dolfinx.default_scalar_type(lvv_initial),
 )
-lv_cavity = pulse.problem.Cavity(marker="ENDO_LV", volume=lv_volume)
+lv_cavity = pulse.problem.Cavity(marker="LV", volume=lv_volume)
 
-rvv_initial = geo.mesh.comm.allreduce(geometry.volume("ENDO_RV"), op=MPI.SUM)
+rvv_initial = geo.mesh.comm.allreduce(geometry.volume("RV"), op=MPI.SUM)
 rv_volume = dolfinx.fem.Constant(
     geometry.mesh, dolfinx.default_scalar_type(rvv_initial),
 )
-rv_cavity = pulse.problem.Cavity(marker="ENDO_RV", volume=rv_volume)
+rv_cavity = pulse.problem.Cavity(marker="RV", volume=rv_volume)
 
 
 cavities = [lv_cavity, rv_cavity]
@@ -279,12 +246,12 @@ Tas = [get_activation(ti) for ti in ts]
 filename = Path("function_checkpoint.bp")
 io4dolfinx.write_mesh(filename, geometry.mesh)
 
-Ta_history = []
+Ta_history: list[float] = []
 
 
 def callback(model, i: int, t: float, save=True):
     Ta_history.append(get_activation(t))
-    if save and i % 100 == 0:
+    if save and i % 10 == 0:
         io4dolfinx.write_function(filename, problem.u, time=t, name="displacement")
         vtx.write(t)
 
@@ -363,18 +330,17 @@ def p_BiV_func(V_LV, V_RV, t):
 mL = circulation.units.ureg("mL")
 add_units = False
 lvv_init = (
-    geo.mesh.comm.allreduce(geometry.volume("ENDO_LV", u=problem.u), op=MPI.SUM)
+    geo.mesh.comm.allreduce(geometry.volume("LV", u=problem.u), op=MPI.SUM)
     * 1e6
     * 1.0
 )  # Increase the volume by 5%
 rvv_init = (
-    geo.mesh.comm.allreduce(geometry.volume("ENDO_RV", u=problem.u), op=MPI.SUM)
+    geo.mesh.comm.allreduce(geometry.volume("RV", u=problem.u), op=MPI.SUM)
     * 1e6
     * 1.0
 )  # Increase the volume by 5%
 logger.info(f"Initial volume (LV): {lvv_init} mL and (RV): {rvv_init} mL")
 init_state = {"V_LV": lvv_initial * 1e6 * mL, "V_RV": rvv_initial * 1e6 * mL}
-
 
 circulation_model_3D = circulation.regazzoni2020.Regazzoni2020(
     add_units=add_units,
@@ -385,6 +351,7 @@ circulation_model_3D = circulation.regazzoni2020.Regazzoni2020(
     outdir=outdir,
     initial_state=init_state,
 )
+# exit()
 # Set end time for early stopping if running in CI
 end_time = 2 * dt if os.getenv("CI") else None
 circulation_model_3D.solve(
@@ -402,10 +369,10 @@ circulation_model_3D.print_info()
 #
 # <video width="720" controls loop autoplay muted>
 #   <source src="../../_static/time_dependent_land_circ_biv.mp4" type="video/mp4">
-#   <p>Video showing the motion of the LV.</p>
+#   <p>Video showing the motion of the BiV.</p>
 # </video>
 #
-# # References
+# ## References
 # ```{bibliography}
 # :filter: docname in docnames
-#
+# ```

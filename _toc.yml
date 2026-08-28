@@ -21,6 +21,9 @@ parts:
       sections:
       - file: "demo/boundary_conditions/lv_ellipsoid_fixed_x"
       - file: "demo/boundary_conditions/ukb_bcs"
+    - file: "demo/howto/README"
+      sections:
+      - file: "demo/howto/spatial_material"
     - file: "demo/prestress/README"
       sections:
       - file: "demo/prestress/prestress_biv"
@@ -33,6 +36,14 @@ parts:
       - file: "demo/time_dependent/time_dependent_land_circ_biv"
       - file: "demo/time_dependent/complete_cycle"
     - file: "demo/postprocess_cycle"
+    - file: "demo/crossbridge/README"
+      sections:
+      - file: "demo/crossbridge/frank_starling_twitch"
+      - file: "demo/crossbridge/crossbridge_land2017"
+      - file: "demo/crossbridge/crossbridge_lewalle2024"
+      - file: "demo/crossbridge/crossbridge_rdq18"
+      - file: "demo/crossbridge/crossbridge_rdq20mf"
+      - file: "demo/crossbridge/crossbridge_comparison"
 
   - caption: Community
     chapters:
@@ -40,3 +51,6 @@ parts:
   - caption: Python API
     chapters:
     - file: "docs/api"
+  - caption: Bibliography
+    chapters:
+    - file: "docs/references"

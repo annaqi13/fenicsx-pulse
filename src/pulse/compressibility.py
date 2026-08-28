@@ -64,7 +64,7 @@ class Incompressible(Compressibility):
 
     """
 
-    p: dolfinx.fem.Function = field(default=None, init=False)
+    p: dolfinx.fem.Function | None = field(default=None, init=False)
 
     def __post_init__(self):
         logger.debug("Created Incompressible compressibility model")
@@ -153,7 +153,8 @@ class Compressible2(Compressible):
 
 @dataclass(slots=True)
 class Compressible3(Compressible):
-    r"""Compressible material model used in Usyk et al. 2002
+    r"""Compressible material model used in Usyk et al.
+    :cite:`usyk2002computational`
 
     Strain energy density function is given by
 

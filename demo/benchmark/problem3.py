@@ -1,6 +1,7 @@
 # # Problem 3: Inflation and Active Contraction of a Ventricle
 #
-# This example implements Problem 3 from the cardiac mechanics benchmark suite [Land et al. 2015].
+# This example implements Problem 3 from the cardiac mechanics benchmark suite
+# {cite}`land2015verification`.
 #
 # ## Problem Description
 #
@@ -70,7 +71,7 @@ geometry = pulse.HeartGeometry.from_cardiac_geometries(geo, metadata={"quadratur
 
 # ## 2. Constitutive Model
 #
-# **Material**: Transversely Isotropic Guccione.
+# **Material**: Transversely Isotropic Guccione {cite}`guccione1991passive`.
 # **Active**: Active Stress model $S_{active} = T_a (\mathbf{f}_0 \otimes \mathbf{f}_0)$.
 
 material_params = {
@@ -187,3 +188,8 @@ else:
         p.show()
     else:
         p.screenshot("problem3.png")
+
+# ## References
+# ```{bibliography}
+# :filter: docname in docnames
+# ```

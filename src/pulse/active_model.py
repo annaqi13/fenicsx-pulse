@@ -47,6 +47,8 @@ import logging
 import dolfinx
 import ufl
 
+from . import kinematics
+
 logger = logging.getLogger(__name__)
 
 
@@ -109,35 +111,51 @@ class ActiveModel(abc.ABC):
             The active strain energy density function
         """
 
-    def S(self, C: ufl.core.expr.Expr) -> ufl.core.expr.Expr:
+    def S(self, C: ufl.core.expr.Expr, dev: bool = False) -> ufl.core.expr.Expr:
         """Cauchy stress tensor for the active model.
 
         Parameters
         ----------
-        F : ufl.core.expr.Expr
+        C : ufl.core.expr.Expr
             The right Cauchy-Green deformation tensor
+        dev : bool
+            Whether to compute the stress for the deviatoric part only
 
         Returns
         -------
         ufl.core.expr.Expr
             The Cauchy stress tensor
         """
-        return 2.0 * ufl.diff(self.strain_energy(C), C)
+        if dev:
+            Cdev = kinematics.Cdev(C)
+        else:
+            Cdev = C
+        return 2.0 * ufl.diff(self.strain_energy(Cdev), C)
 
-    def P(self, F: ufl.core.expr.Expr) -> ufl.core.expr.Expr:
+    def P(self, F: ufl.core.expr.Expr, dev: bool = False) -> ufl.core.expr.Expr:
         """First Piola-Kirchhoff stress tensor for the active model.
 
         Parameters
         ----------
         F : ufl.core.expr.Expr
             The deformation gradient
+        dev : bool
+            Whether to compute the stress for the deviatoric part only
 
         Returns
         -------
         ufl.core.expr.Expr
             The first Piola-Kirchhoff stress tensor
         """
-        return ufl.diff(self.strain_energy(F.T * F), F)
+        C = F.T * F
+        if dev:
+            Cdev = kinematics.Cdev(C)
+        else:
+            Cdev = C
+        return ufl.diff(self.strain_energy(Cdev), F)
+
+    def register(self, u: dolfinx.fem.Function) -> None:
+        pass
 
 
 class Passive(ActiveModel):
@@ -153,4 +171,6 @@ class Passive(ActiveModel):
         return F
 
     def strain_energy(self, C: ufl.core.expr.Expr) -> ufl.core.expr.Expr:
-        return dolfinx.fem.Constant(ufl.domain.extract_unique_domain(C), 0.0)
+        domain = ufl.domain.extract_unique_domain(C)
+        assert isinstance(domain, ufl.Mesh)
+        return dolfinx.fem.Constant(domain, 0.0)

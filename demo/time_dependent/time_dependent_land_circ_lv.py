@@ -30,12 +30,12 @@
 #     * **Epicardium & Base**: Robin BCs (springs) to mimic pericardial constraint and prevent rigid body motion.
 #     * **Endocardium**: The pressure $P$ is a Lagrange multiplier enforcing the volume constraint $V(\mathbf{u}) = V_{target}$.
 #
-# ### 0D Circulation [Regazzoni et al. 2022]
+# ### 0D Circulation {cite}`regazzoni2022cardiac`
 # A closed-loop lumped-parameter network representing the systemic and pulmonary circulation.
 # It includes 4 chambers (LA, LV, RA, RV) and systemic/pulmonary arteries and veins.
 # In this example, we replace the 0D description of the LV with our 3D finite element model.
 #
-# ### 0D Cell Model [Tomek et al. 2019 + Land et al. 2017]
+# ### 0D Cell Model ({cite}`tomek2019development` + {cite}`land2017model`)
 # * **TorOrd**: Detailed human ventricular action potential model.
 # * **Land**: Mechanical model describing cross-bridge dynamics and calcium binding to Troponin-C.
 #
@@ -110,7 +110,7 @@ geometry = pulse.HeartGeometry.from_cardiac_geometries(
 material_params = pulse.HolzapfelOgden.transversely_isotropic_parameters()
 material = pulse.HolzapfelOgden(f0=geo.f0, s0=geo.s0, **material_params)  # type: ignore
 
-# We use an active stress approach with 30% transverse active stress (see {py:meth}`pulse.active_stress.transversely_active_stress`)
+# We use an active stress approach with 30% transverse active stress (see {py:func}`pulse.active_stress.transversely_active_stress`)
 
 Ta = pulse.Variable(
     dolfinx.fem.Constant(geometry.mesh, dolfinx.default_scalar_type(0.0)), "kPa",
@@ -307,7 +307,7 @@ vtx.write(0.0)
 filename = Path("function_checkpoint.bp")
 io4dolfinx.write_mesh(filename, geometry.mesh)
 
-Ta_history = []
+Ta_history: list[float] = []
 # Next we set up the callback function that will be called at each time step. Here we save the displacement of the LV, the pressure volume loop, and the active tension, and we also plot the pressure volume loop at each time step.
 
 
@@ -421,7 +421,7 @@ circulation_model_3D.print_info()
 #   <p>Video showing the motion of the LV.</p>
 # </video>
 #
-# # References
+# ## References
 # ```{bibliography}
 # :filter: docname in docnames
-#
+# ```

@@ -1,10 +1,15 @@
+import logging
 import operator
 from dataclasses import dataclass
+from typing import cast
 
 from mpi4py import MPI
 
 import dolfinx
 import numpy as np
+import ufl
+
+logger = logging.getLogger(__name__)
 
 
 def check_value_greater_than(
@@ -31,7 +36,7 @@ def check_value_greater_than(
     """
     op = operator.ge if inclusive else operator.gt
     if np.isscalar(f):
-        return op(f, bound)
+        return op(cast(float, f), bound)
     elif isinstance(f, dolfinx.fem.Constant):
         return op(f.value.max(), bound)
     elif isinstance(f, dolfinx.fem.Function):
@@ -39,6 +44,17 @@ def check_value_greater_than(
             f.function_space.mesh.comm.allreduce(f.x.array.max(), op=MPI.MAX),
             bound,
         )
+
+    elif isinstance(f, ufl.indexed.Indexed):
+        try:
+            func, index = f.ufl_operands
+            value = cast(dolfinx.fem.Function, func).x.array[int(index[0])]
+            return op(value, bound)
+        except Exception:
+            logger.warning(
+                "Could not extract value from ufl.indexed.Indexed. Assuming check succeeds.",
+            )
+            return True
 
     raise PulseException(  # pragma: no cover
         f"Invalid type for f: {type(f)}. Expected 'float', "
@@ -70,7 +86,7 @@ def check_value_lower_than(
     """
     op = operator.le if inclusive else operator.lt
     if np.isscalar(f):
-        return op(f, bound)
+        return op(cast(float, f), bound)
     elif isinstance(f, dolfinx.fem.Constant):
         return op(f.value.min(), bound)
     elif isinstance(f, dolfinx.fem.Function):

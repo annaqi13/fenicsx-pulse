@@ -69,7 +69,7 @@ class HolzapfelOgden(HyperElasticMaterial):
 
     Notes
     -----
-    Original model from Holzapfel and Ogden [1]_.
+    Original model from Holzapfel and Ogden :cite:`holzapfel2009constitutive`.
     The strain energy density function is given by
 
     .. math::
@@ -96,13 +96,6 @@ class HolzapfelOgden(HyperElasticMaterial):
         \end{cases}
 
     is the Heaviside function.
-
-    .. [1] Holzapfel, Gerhard A., and Ray W. Ogden.
-        "Constitutive modelling of passive myocardium:
-        a structurally based framework for material characterization.
-        "Philosophical Transactions of the Royal Society of London A:
-        Mathematical, Physical and Engineering Sciences 367.1902 (2009):
-        3445-3475.
 
     """
 
@@ -219,7 +212,7 @@ class HolzapfelOgden(HyperElasticMaterial):
             else:
                 return lambda I1: (a / 2.0) * (I1 - 3)
         else:
-            return lambda I1: 0.0
+            return lambda I1: ufl.as_ufl(0.0)
 
     def _resolve_W4(self, a: Variable, b: Variable, required_attr: str) -> Invariant:
         subplus = functions.subplus if self.use_subplus else lambda x: x
@@ -245,7 +238,7 @@ class HolzapfelOgden(HyperElasticMaterial):
                     * subplus(I4 - 1) ** 2
                 )
         else:
-            return lambda I4: 0.0
+            return lambda I4: ufl.as_ufl(0.0)
 
     def _resolve_W8fs(self) -> Invariant:
         a_fs = self.a_fs.to_base_units()
@@ -261,7 +254,7 @@ class HolzapfelOgden(HyperElasticMaterial):
             else:
                 return lambda I8: a_fs / 2.0 * I8**2
         else:
-            return lambda I8: 0.0
+            return lambda I8: ufl.as_ufl(0.0)
 
     @staticmethod
     def transversely_isotropic_parameters(stiffness_scale = 1.0) -> HolzapfelOgdenParameters:

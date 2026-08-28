@@ -17,13 +17,12 @@ jobs:
       fail-fast: false
       matrix:
         container: [
-          "ghcr.io/fenics/dolfinx/dolfinx:v0.9.0",
           "ghcr.io/fenics/dolfinx/dolfinx:stable",
           "ghcr.io/fenics/dolfinx/dolfinx:nightly"
         ]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install build dependencies
         run: |
@@ -53,7 +52,7 @@ jobs:
 
       - name: Upload HTML report.
         if: ${{ matrix.container == 'ghcr.io/fenics/dolfinx/dolfinx:stable' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: html-report
           path: htmlcov

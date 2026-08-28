@@ -18,18 +18,18 @@
 
 ## Install
 You can install the library with `pip`
-```
+```bash
 python3 -m pip install fenicsx-pulse
 ```
 or with `conda`
-```
+```bash
 conda install -c conda-forge fenicsx-pulse
 ```
 Note that installing with `pip` requires [FEniCSx already installed](https://fenicsproject.org/download/)
 
 We also provide a pre-built docker image with FEniCSx and `fenicsx_pulse` installed. You pull this image using the command
-```
-docker pull ghcr.io/finsberg/fenicsx-pulse:v0.5.1
+```bash
+docker pull ghcr.io/finsberg/fenicsx-pulse:v0.7.0
 ```
 
 ## Getting started
@@ -58,7 +58,7 @@ material = pulse.HolzapfelOgden(f0=geo.f0, s0=geo.s0, **material_params)
 Ta = pulse.Variable(dolfinx.fem.Constant(geometry.mesh, dolfinx.default_scalar_type(0.0)), "kPa")
 active_model = pulse.ActiveStress(geo.f0, activation=Ta)
 
-# Define mode for compressibility
+# Define model for compressibility
 comp_model = pulse.Incompressible()
 
 # Assemble into a cardiac model
@@ -139,9 +139,27 @@ https://github.com/user-attachments/assets/8e2f5d85-3fbf-4e30-9574-22e7f718230c
 
 
 
-Checkout out [the demos](https://finsberg.github.io/fenicsx-pulse/demo/unit_cube.html) in the documentation for more examples.
+Check out [the demos](https://finsberg.github.io/fenicsx-pulse/demo/geometries/unit_cube.html) in the documentation for more examples.
 
+## Using with Claude
 
+This repo ships a [Claude Agent Skill](https://docs.claude.com/en/docs/claude-code/skills) at
+[`.claude/skills/fenicsx-pulse/SKILL.md`](.claude/skills/fenicsx-pulse/SKILL.md) that teaches
+Claude the `fenicsx-pulse` composition model (`CardiacModel`, `StaticProblem`/`DynamicProblem`,
+materials, active contraction, boundary conditions, units, ...) so it can write and review code
+against this library more accurately.
+
+To use it in your own project with [Claude Code](https://claude.com/product/claude-code), copy the
+skill into your project's `.claude/skills/` directory:
+
+```bash
+mkdir -p .claude/skills/fenicsx-pulse
+curl -o .claude/skills/fenicsx-pulse/SKILL.md \
+    https://raw.githubusercontent.com/finsberg/fenicsx-pulse/main/.claude/skills/fenicsx-pulse/SKILL.md
+```
+
+Claude will then automatically load it whenever your prompt or code touches `fenicsx-pulse`/`pulse`.
+To install it globally for all your projects, copy it to `~/.claude/skills/fenicsx-pulse/` instead.
 
 ## Contributing
 See https://finsberg.github.io/fenicsx-pulse/CONTRIBUTING.html
